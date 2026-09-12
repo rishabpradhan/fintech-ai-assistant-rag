@@ -1,12 +1,12 @@
 from xmlrpc import client
 
 from google import genai
-from app.config import Setting
+from app.config import settings
 from app.embeddings import embed_text
 from app.vector_store import search_similar_chunks
 
 client = genai.Client(
-    api_key=Setting.gemini_api_key
+    api_key=settings.gemini_api_key
 )
 
 
@@ -34,12 +34,10 @@ def answer_question(question: str, top_k: int = 5) -> dict:
 
     user_message = f"Context:\n{context}\n\nQuestion: {question}"
 
-    response = client.messages.create(
-        model=Setting.model_name,
-        max_tokens=1000,
-        temperature=0.2,
-        system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": user_message}],
+    response = client.models.generate_content(
+        model=settings.model_name,  # e.g. "gemini-2.0-flash"
+        contents=user_message,
+        config={"system_instruction": SYSTEM_PROMPT, "temperature": 0.2, "max_output_tokens": 1000},
     )
 
     sources = [
